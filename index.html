@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#176b5b">
+<title>영상 중국어 학습실 - 수정판</title>
+<style>
+:root{--g:#176b5b;--p:#e8f5f0;--ink:#1f2937;--muted:#64748b;--line:#dbe4e8;--bg:#f5f7f8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--g);color:white;padding:16px}h1{font-size:20px;margin:0 0 4px}header p{margin:0;font-size:13px}
+main{max-width:1000px;margin:auto;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+h2{font-size:17px;margin:0 0 10px}label{display:block;font-size:13px;font-weight:650;margin:10px 0 5px}input,textarea,select{width:100%;font:inherit;border:1px solid #cbd5e1;border-radius:9px;padding:10px;background:white}textarea{min-height:85px;line-height:1.5}
+button{border:0;border-radius:9px;padding:10px 12px;font:inherit;font-weight:650;background:var(--g);color:white;cursor:pointer}.secondary{background:var(--p);color:var(--g);border:1px solid #c4e4d9}.ghost{background:#f1f5f9;color:#334155}.danger{background:#fff1f2;color:#be123c}
+.row{display:flex;gap:7px;align-items:center;margin-top:8px}.row>*{min-width:0}.row input{flex:1}
+#player{width:100%;aspect-ratio:16/9;background:#0f172a;border-radius:10px;overflow:hidden;margin-top:10px;color:white;display:flex;align-items:center;justify-content:center;text-align:center;padding:15px}#player iframe{width:100%;height:100%;border:0}
+.pill{display:inline-block;background:#f1f5f9;border-radius:20px;padding:5px 9px;font-size:12px;color:#475569;margin:8px 4px 0 0}.big{width:100%;font-size:17px;padding:14px;margin-top:9px}.status{padding:10px;border-radius:9px;background:#f8fafc;color:#475569;font-size:13px;line-height:1.5;margin-top:9px}.warn{background:#fffbeb;color:#92400e}.ok{background:#ecfdf5;color:#065f46}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}.tab{background:#eef2f7;color:#334155;padding:9px}.tab.active{background:var(--g);color:white}.panel{display:none}.panel.active{display:block}
+.list{display:flex;flex-direction:column;gap:7px}.item{border:1px solid var(--line);border-radius:10px;padding:9px;display:flex;justify-content:space-between;align-items:center;gap:8px}.item strong{display:block;overflow-wrap:anywhere}.item small{color:var(--muted);font-size:12px}.item{flex-wrap:wrap}.item .meta{flex:1 1 140px}.item.active{border-color:var(--g);background:var(--p)}.item button{font-size:12px;padding:7px}.meta{min-width:0}.wordrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef2f7}.word{font-size:17px;font-weight:750}.details{font-size:12px;color:var(--muted)}.sub{font-size:12px;line-height:1.5;color:var(--muted)}.empty{padding:14px;text-align:center;color:var(--muted);font-size:13px}
+.sentbox{border:1px solid var(--line);border-radius:10px;padding:9px 10px;margin-top:10px}.sentline{font-size:15px;font-weight:650;line-height:1.5;overflow-wrap:anywhere;padding-bottom:6px;border-bottom:1px solid #eef2f7}
+.tokrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9}.tokrow:last-child{border-bottom:0}.tokchk{flex:1 1 100%;display:flex;align-items:center;gap:8px;margin:0;font-weight:400}.tokchk input{width:auto}.tokrow .tf{padding:7px 9px;font-size:14px}.tokrow .py{flex:1 1 110px}.tokrow .mn{flex:2 1 160px}.tokrow small{color:var(--muted);font-size:12px}
+.pvwrap{position:relative;margin:8px auto 0;overflow:hidden;border-radius:8px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.pvwrap img{display:block;width:100%;height:auto;pointer-events:none}.pvwrap.sel{touch-action:none;cursor:crosshair;outline:3px solid #22c55e}#cropBox{position:absolute;border:2px solid #22c55e;box-shadow:0 0 0 9999px rgba(0,0,0,.45);display:none;pointer-events:none}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:9px}.card{padding:12px}.row{flex-wrap:wrap}.row button{flex:1}}
+</style>
+</head>
+<body>
+<header><h1>🎬 영상 중국어 학습실</h1><p>구간 반복 · 체크 장면 이동 · OCR · 문장 편집 · 단어장</p></header>
+<main>
+<section class="card">
+<h2>1. 영상 선택 및 시간 체크</h2>
+<label for="videoUrl">유튜브 URL 또는 영상 ID</label>
+<div class="row"><input id="videoUrl" placeholder="유튜브 주소 붙여넣기"><button id="loadVideo">영상 열기</button></div>
+<div id="player">유튜브가 재생되지 않으면 아래 ‘테스트 모드’를 사용하세요.</div>
+<div><span class="pill" id="timeNow">현재 시간: 00:00</span><span class="pill" id="vidStatus">영상 미선택</span></div>
+<div class="row"><button id="demoMode" class="secondary">테스트 모드 켜기</button><button id="playPause" class="ghost">재생/일시정지</button></div>
+<button class="big" id="markBtn">☑ 이 장면 체크 · 시간 기록</button><button class="big secondary" id="markShotBtn">☑📸 체크 + 자막 추출</button>
+<div class="row"><button class="secondary" id="startBtn">시작 지점 지정</button><button class="secondary" id="endBtn">종료 지점 지정</button></div>
+<div class="row"><input id="startIn" placeholder="시작 00:35" inputmode="numeric" aria-label="시작 시간"><input id="endIn" placeholder="종료 00:48" inputmode="numeric" aria-label="종료 시간"></div>
+<div class="row"><label for="repeatN" style="margin:0;white-space:nowrap">반복 횟수</label><input id="repeatN" type="number" min="0" value="0" style="flex:none;width:80px"><span class="sub">0 = 무한 반복</span></div>
+<div class="row"><button id="loopBtn">▶ 구간 반복</button><button id="saveRange" class="secondary">구간 저장</button></div>
+<div class="row"><button class="ghost" id="prevRange">◀ 이전 구간</button><button class="ghost" id="nextRange">다음 구간 ▶</button></div>
+<div class="status" id="rangeStatus">시작/종료 지점을 지정하세요.</div>
+<div id="rangesList" class="list" style="margin-top:9px"></div>
+<p class="sub">참고: 유튜브 임베드가 차단되는 영상도 있습니다. 테스트 모드에서는 영상 없이 시간 기록 기능을 시험할 수 있습니다.</p>
+</section>
+<section class="card">
+<div class="tabs">
+<button class="tab active" data-tab="textPanel">자막/텍스트</button><button class="tab" data-tab="imagePanel">이미지 OCR</button><button class="tab" data-tab="audioPanel">음성 텍스트</button><button class="tab" data-tab="vocabPanel">단어장</button>
+</div>
+<div id="textPanel" class="panel active">
+<h2>2. 자막/스크립트</h2><p class="sub">기존 스크립트가 있으면 붙여 넣으세요. 문장을 나누고 단어로 분석합니다. 번체·간체 모두 됩니다.</p>
+<label for="sourceText">중국어 문장</label><textarea id="sourceText" placeholder="我們今天要去台北玩。"></textarea>
+<label for="sourceType">출처</label><select id="sourceType"><option value="script">기존 스크립트/자막</option><option value="ocr">이미지 OCR</option><option value="stt">음성 인식</option><option value="manual">직접 입력/수정</option></select>
+<div class="row"><button id="analyzeText">단어 나누기</button><button id="cleanText" class="ghost">공백 정리</button><button id="saveSentence" class="secondary">문장 저장</button></div>
+<div class="status" id="textStatus">중국어 문장을 입력한 뒤 단어 나누기를 누르세요. 병음·뜻은 직접 고치거나 AI로 채울 수 있습니다.</div><div class="row" id="analysisActions" style="display:none"><button id="fillAi" class="secondary">✨ 병음·뜻 AI로 채우기</button><button id="saveSplit" class="ghost">문장별 저장</button></div><div id="tokenList"></div><button id="saveWords" class="big" style="display:none">선택 단어 저장</button>
+</div>
+<div id="imagePanel" class="panel">
+<h2>3. 이미지 자막 OCR</h2><p class="sub">스크린샷을 선택해 글자를 인식합니다. 첫 실행에는 인터넷이 필요할 수 있습니다.</p>
+<label for="imageFile">영상 화면 캡처 이미지 선택</label><input type="file" id="imageFile" accept="image/*">
+<label for="ocrLang">인식할 문자</label>
+<select id="ocrLang">
+<option value="chi_tra">중국어 번체 (대만)</option>
+<option value="chi_sim">중국어 간체</option>
+<option value="chi_tra+eng">번체 + 영어</option>
+<option value="chi_sim+eng">간체 + 영어</option>
+<option value="kor+eng">한국어 + 영어</option>
+</select>
+<label for="subArea">자막 위치 (영역을 직접 선택하지 않았을 때)</label><select id="subArea"><option value="0.65">화면 아래쪽 (기본)</option><option value="0.4">화면 중간~아래</option><option value="0">화면 전체</option></select>
+<div class="row"><button class="secondary" id="cropBtn">✂ 자막 영역 직접 선택</button><button class="ghost" id="cropClear" style="display:none">영역 해제</button></div>
+<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="autoRun" checked style="width:auto">이미지를 고르면 자막 추출과 AI 추천을 자동 실행</label>
+<p class="sub">선택한 위치의 글자 중 중국어 줄만 남깁니다. 휴대폰 스크린샷처럼 영상이 화면 일부만 차지하면 '화면 전체'를 고르거나 영상 부분만 잘라서 올리세요. PC에서는 스크린샷 후 Ctrl+V로 바로 붙여넣을 수 있습니다.</p>
+<div class="pvwrap" id="pvWrap" style="display:none"><img id="preview" alt="미리보기"><div id="cropBox"></div></div>
+<button id="aiOcrBtn" class="big secondary">✨ AI로 자막 읽기 (Gemini · 더 정확)</button><button id="runOcr" class="big">이미지에서 글자 추출</button><div class="status" id="ocrStatus">이미지를 선택하세요.</div>
+<label for="ocrText">추출 결과 (수정 가능)</label><textarea id="ocrText" placeholder="OCR 결과가 여기에 나옵니다."></textarea><button id="cleanOcr" class="big secondary">중국어 공백 정리</button><button id="useOcr" class="big">수정한 텍스트 사용</button><button id="aiBtn" class="big secondary">✨ AI 단어 추천</button><div class="status" id="aiStatus">자막을 추출하면 AI가 공부할 단어를 추천합니다.</div><div id="aiList"></div><button id="aiSave" class="big" style="display:none">선택 단어 저장</button>
+</div>
+<div id="audioPanel" class="panel">
+<h2>4. 음성 구간 / 음성 인식 텍스트</h2><div class="status warn">현재는 음성 구간의 시작·끝 시간을 기록하고, 다른 곳에서 받아 적은 STT 결과를 붙여 넣어 수정하는 기능입니다. 유튜브 음성을 앱이 직접 듣고 자동 변환하는 기능은 아직 연결되지 않았습니다.</div>
+<label for="sttText">인식 결과 / 직접 입력</label><textarea id="sttText" placeholder="我們今天要去台北玩。"></textarea>
+<div class="row"><button id="useStt">텍스트 사용</button><button id="rangeInfo" class="secondary">구간 정보 확인</button></div><div class="status" id="sttStatus"></div>
+</div>
+<div id="vocabPanel" class="panel"><h2>5. 단어장</h2><button id="clearWords" class="danger">단어장 전체 삭제</button><div id="vocabList" class="list" style="margin-top:9px"></div></div>
+</section>
+<section class="card" style="grid-column:1/-1">
+<h2>체크한 장면</h2><div id="marksList" class="list"></div>
+<h2 style="margin-top:16px">저장한 문장</h2><div id="sentencesList" class="list"></div>
+<div class="row"><button id="exportData" class="secondary">기록 내보내기</button><button id="importData" class="ghost">기록 가져오기</button><input id="importFile" type="file" accept="application/json" hidden></div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+const $=x=>document.getElementById(x);
+let player=null,ready=false,videoId="",demo=false,demoTime=0,lastTick=Date.now(),start=null,end=null,selectedImage=null,tokens=[];
+let marks=load("marks"),words=load("words"),sentences=load("sentences"),ranges=load("ranges"),looping=false,loopCount=0,pendingSeek=null,activeRange=null;
+function load(k){try{return JSON.parse(localStorage.getItem("fix_"+k)||"[]")}catch(e){return []}}
+function save(){localStorage.setItem("fix_marks",JSON.stringify(marks));localStorage.setItem("fix_words",JSON.stringify(words));localStorage.setItem("fix_sentences",JSON.stringify(sentences));localStorage.setItem("fix_ranges",JSON.stringify(ranges));render()}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmt(t){t=Math.max(0,Math.floor(t||0));return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0")}
+function parseId(s){s=(s||"").trim();if(/^[\w-]{11}$/.test(s))return s;try{let u=new URL(s);if(u.hostname.includes("youtu.be"))return u.pathname.slice(1).split("/")[0];if(u.searchParams.get("v"))return u.searchParams.get("v");let m=u.pathname.match(/\/(?:embed|shorts)\/([^/?]+)/);return m?m[1]:""}catch(e){return ""}}
+function time(){try{if(demo)return demoTime;if(player&&ready)return player.getCurrentTime()||0}catch(e){}return 0}
+function status(t){$("vidStatus").textContent=t}
+function openVideo(id){
+ stopLoop();videoId=id;demo=false;ready=false;demoTime=0;lastTick=Date.now();$("player").innerHTML='<div id="ytbox" style="width:100%;height:100%"></div>';status("유튜브 로딩 중");
+ const make=()=>{try{if(player&&player.destroy)player.destroy();player=new YT.Player("ytbox",{videoId:id,width:"100%",height:"100%",playerVars:{playsinline:1,rel:0},events:{onReady:()=>{ready=true;status("영상 준비 완료");applyPending()},onError:e=>{status("유튜브 재생 제한 · 테스트 모드를 사용하세요");$("player").innerHTML="이 영상은 임베드 재생이 제한될 수 있습니다. 테스트 모드를 켜거나 다른 영상을 사용하세요."}}})}catch(e){status("영상 플레이어 오류 · 테스트 모드를 사용하세요")}};
+ if(window.YT&&YT.Player)make();else{window.onYouTubeIframeAPIReady=make;if(!document.querySelector("[data-yt-api]")){let s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";s.dataset.ytApi="1";s.onerror=()=>{status("유튜브 API 로딩 실패 · 테스트 모드를 사용하세요")};document.head.appendChild(s)}}
+}
+$("loadVideo").onclick=()=>{let id=parseId($("videoUrl").value);if(!id){alert("유효한 유튜브 URL 또는 영상 ID를 입력하세요.");return}pendingSeek=null;openVideo(id)};
+$("demoMode").onclick=()=>{demo=true;ready=true;player=null;videoId=videoId||"DEMO";demoTime=0;lastTick=Date.now();$("player").innerHTML='<div><b>테스트 모드</b><br><br>실제 영상 없이 시간 기록 버튼과 학습 기능을 시험합니다.<br><small>재생/일시정지 버튼으로 테스트 시간을 움직일 수 있습니다.</small></div>';status("테스트 모드 · 시간 기록 가능")};
+$("playPause").onclick=()=>{if(demo){demoPlaying=!demoPlaying;lastTick=Date.now();$("playPause").textContent=demoPlaying?"일시정지":"재생";return}try{if(player&&ready){let s=player.getPlayerState();if(s===1)player.pauseVideo();else player.playVideo()}}catch(e){}};
+let demoPlaying=false;
+setInterval(()=>{if(demo&&demoPlaying){let n=Date.now();demoTime+=(n-lastTick)/1000;lastTick=n}$("timeNow").textContent="현재 시간: "+fmt(time())},500);
+$("markBtn").onclick=()=>{if(!videoId){alert("먼저 유튜브 주소를 열거나 테스트 모드를 켜세요.");return}marks.unshift({id:Date.now()+Math.random(),videoId,title:(()=>{try{return player.getVideoData().title||""}catch(e){return ""}})(),time:time(),text:"",created:new Date().toISOString()});curMark=marks[0];save();status("체크 저장: "+fmt(time()))};
+const CJK="\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff\\u3000-\\u303f\\uff00-\\uffef";
+const reGap=new RegExp("(["+CJK+"])[ \\t\\u00a0\\u3000]+(?=["+CJK+"])","g");
+const rePunc=new RegExp("(["+CJK+"])[ \\t]*([,.?!;:])(?!\\d)","g");
+const fullP={",":"，",".":"。","?":"？","!":"！",";":"；",":":"："};
+function cleanZh(t){return String(t||"").replace(/\r/g,"").replace(reGap,"$1").replace(rePunc,(m,a,b)=>a+fullP[b]).replace(reGap,"$1").split("\n").map(l=>l.trim()).filter(Boolean).join("\n")}
+const r1=t=>Math.round(t*10)/10;
+function syncInputs(){$("startIn").value=start===null?"":fmt(start);$("endIn").value=end===null?"":fmt(end);updRange()}
+function updRange(){$("rangeStatus").textContent=(start===null?"시작 미지정":"시작 "+fmt(start))+" ~ "+(end===null?"종료 미지정":"종료 "+fmt(end))+(looping?" · 반복 중 ("+loopCount+"회 완료"+(+$("repeatN").value>0?" / "+$("repeatN").value+"회":"")+")":"")}
+function parseT(v){v=String(v||"").trim();if(!v)return null;if(/^\d+(\.\d+)?$/.test(v))return +v;let p=v.split(":").map(Number);if(p.length>3||p.some(isNaN))return null;return p.reduce((a,b)=>a*60+b,0)}
+function seek(t,play=true){try{if(demo){demoTime=t;lastTick=Date.now();if(play&&!demoPlaying){demoPlaying=true;$("playPause").textContent="일시정지"}return}if(player&&ready){player.seekTo(t,true);if(play)player.playVideo()}}catch(e){}}
+function applyPending(){if(!pendingSeek)return;let p=pendingSeek;pendingSeek=null;seek(p.t);if(p.after)p.after()}
+function gotoVideo(vid,t,after){
+ if(!vid){alert("이 기록에는 영상 정보가 없습니다.");return}
+ if(vid==="DEMO"){if(!demo)$("demoMode").click()}
+ else if(demo||vid!==videoId){openVideo(vid);pendingSeek={t,after};return}
+ seek(t);if(after)after()}
+function startLoop(){looping=true;loopCount=0;$("loopBtn").textContent="■ 반복 중지";updRange()}
+function stopLoop(){looping=false;$("loopBtn").textContent="▶ 구간 반복";updRange()}
+function validRange(){if(start===null||end===null||end<=start){alert("시작·종료 시간을 올바르게 지정하세요. 종료는 시작보다 뒤여야 합니다.");return false}return true}
+$("startBtn").onclick=()=>{start=r1(time());syncInputs()};
+$("endBtn").onclick=()=>{end=r1(time());syncInputs()};
+$("startIn").onchange=()=>{let v=parseT($("startIn").value);if(v===null&&$("startIn").value.trim()){alert("시간은 00:35 또는 1:02:10 형식으로 입력하세요.")}else start=v;syncInputs()};
+$("endIn").onchange=()=>{let v=parseT($("endIn").value);if(v===null&&$("endIn").value.trim()){alert("시간은 00:48 또는 1:02:10 형식으로 입력하세요.")}else end=v;syncInputs()};
+$("repeatN").onchange=updRange;
+$("loopBtn").onclick=()=>{if(looping){stopLoop();return}if(!videoId){alert("먼저 영상을 열거나 테스트 모드를 켜세요.");return}if(!validRange())return;seek(start);startLoop()};
+setInterval(()=>{if(!looping||end===null)return;if(time()>=end){loopCount++;let n=+$("repeatN").value||0;if(n>0&&loopCount>=n){stopLoop();try{if(demo){demoPlaying=false;$("playPause").textContent="재생"}else player.pauseVideo()}catch(e){}return}seek(start);updRange()}},200);
+$("saveRange").onclick=()=>{if(!videoId){alert("먼저 영상을 열거나 테스트 모드를 켜세요.");return}if(!validRange())return;ranges.push({id:Date.now()+Math.random(),videoId,start,end,name:""});save()};
+function siblings(){return ranges.filter(r=>r.videoId===videoId).sort((a,b)=>a.start-b.start)}
+function stepRange(d){let l=siblings();if(!l.length){alert("이 영상에 저장한 구간이 없습니다.");return}let i=l.findIndex(r=>String(r.id)===String(activeRange));i=i<0?(d>0?0:l.length-1):(i+d+l.length)%l.length;playRange(l[i].id)}
+$("prevRange").onclick=()=>stepRange(-1);$("nextRange").onclick=()=>stepRange(1);
+window.playRange=id=>{let r=ranges.find(x=>String(x.id)===String(id));if(!r)return;activeRange=r.id;start=r.start;end=r.end;syncInputs();gotoVideo(r.videoId,r.start,startLoop);render()};
+window.delRange=id=>{ranges=ranges.filter(r=>String(r.id)!==String(id));if(String(activeRange)===String(id))activeRange=null;save()};
+window.goMark=id=>{let m=marks.find(x=>String(x.id)===String(id));if(m)gotoVideo(m.videoId,m.time)};
+window.markAs=(id,w)=>{let m=marks.find(x=>String(x.id)===String(id));if(!m)return;if(m.videoId!==videoId&&!(demo&&m.videoId==="DEMO")){alert("현재 열려 있는 영상의 체크만 구간으로 지정할 수 있습니다. 먼저 이동을 눌러 해당 영상을 여세요.");return}if(w==="s")start=m.time;else end=m.time;syncInputs()};
+window.nameMark=id=>{let m=marks.find(x=>String(x.id)===String(id));if(!m)return;let n=prompt("기록 이름",m.text||"");if(n!==null){m.text=n.trim();save()}};
+window.goSent=id=>{let s=sentences.find(x=>String(x.id)===String(id));if(s)gotoVideo(s.videoId,s.start!=null?s.start:(s.time||0))};
+function renderRanges(){$("rangesList").innerHTML=ranges.length?[...ranges].sort((a,b)=>String(a.videoId).localeCompare(String(b.videoId))||a.start-b.start).map(r=>`<div class="item${String(r.id)===String(activeRange)?" active":""}"><div class="meta"><strong>${fmt(r.start)} ~ ${fmt(r.end)}</strong><small>${esc(r.videoId)}</small></div><div class="row" style="margin:0"><button class="secondary" onclick="playRange('${r.id}')">반복 재생</button><button class="danger" onclick="delRange('${r.id}')">삭제</button></div></div>`).join(""):""}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x===b));document.querySelectorAll(".panel").forEach(x=>x.classList.toggle("active",x.id===b.dataset.tab))});
+function tab(id){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));document.querySelectorAll(".panel").forEach(x=>x.classList.toggle("active",x.id===id))}
+const dict={"我們":["wǒmen","우리"],"我":["wǒ","나"],"你":["nǐ","너, 당신"],"今天":["jīntiān","오늘"],"明天":["míngtiān","내일"],"要":["yào","~하려고 하다"],"想":["xiǎng","~하고 싶다"],"去":["qù","가다"],"台北":["Táiběi","타이베이"],"臺北":["Táiběi","타이베이"],"玩":["wán","놀다"],"哪裡":["nǎlǐ","어디"],"去哪裡":["qù nǎlǐ","어디에 가다"],"我們今天":["wǒmen jīntiān","우리 오늘"],"喜歡":["xǐhuān","좋아하다"],"覺得":["juéde","~라고 생각하다"],"知道":["zhīdào","알다"],"中文":["Zhōngwén","중국어"],"謝謝":["xièxie","감사합니다"],"你好":["nǐ hǎo","안녕하세요"],"有空":["yǒu kòng","시간이 있다"],"可以":["kěyǐ","~할 수 있다"]};
+const known=Object.keys(dict).sort((a,b)=>b.length-a.length);
+function splitText(s){s=s.replace(/[，。！？；：、,.!?;:\s「」『』（）()"'“”]/g,"");let out=[],i=0;while(i<s.length){let w=known.find(w=>s.startsWith(w,i));if(w){out.push(w);i+=w.length}else{out.push(s[i]);i++}}return [...new Set(out)]}
+let analysis=[];
+const HANONE=/[\u3400-\u9fff]/;
+const STOP=new Set("的 了 嗎 吗 呢 吧 啊 啦 呀 是 我 你 他 她 它 在 和 也 就 都 不 很 個 个 這 这 那 麼 么 有".split(" "));
+function splitSentences(t){return String(t||"").replace(/\r/g,"").split(/\n+/).flatMap(l=>l.match(/[^。！？!?；;…]+[。！？!?；;…]*[」』”）)]*/g)||[]).map(x=>x.trim()).filter(x=>HANONE.test(x))}
+function segWords(s){let parts;if(window.Intl&&Intl.Segmenter){parts=[...new Intl.Segmenter("zh",{granularity:"word"}).segment(s)].filter(x=>x.isWordLike).map(x=>x.segment)}else parts=splitText(s);return parts.filter(w=>HANONE.test(w))}
+function renderAnalysis(){
+ $("tokenList").innerHTML=analysis.map((a,si)=>`<div class="sentbox"><div class="sentline">${esc(a.s)}</div>${a.toks.map((t,ti)=>{const have=words.some(x=>x.word===t.w);return `<div class="tokrow"><label class="tokchk"><input type="checkbox" data-s="${si}" data-t="${ti}" data-f="sel" ${have?"disabled":(t.sel?"checked":"")}><span class="word">${esc(t.w)}</span>${have?"<small>단어장에 저장됨</small>":""}</label><input class="tf py" data-s="${si}" data-t="${ti}" data-f="py" value="${esc(t.py)}" placeholder="병음"><input class="tf mn" data-s="${si}" data-t="${ti}" data-f="mean" value="${esc(t.mean)}" placeholder="한국어 뜻 (수정 가능)"></div>`}).join("")}</div>`).join("");
+ const n=analysis.reduce((c,a)=>c+a.toks.length,0);$("analysisActions").style.display=n?"flex":"none";$("saveWords").style.display=n?"block":"none"}
+$("tokenList").addEventListener("change",e=>{const el=e.target;if(!el.dataset||!el.dataset.f)return;const t=analysis[+el.dataset.s]&&analysis[+el.dataset.s].toks[+el.dataset.t];if(!t)return;if(el.dataset.f==="sel")t.sel=el.checked;else{t[el.dataset.f]=el.value.trim();t.edited=true}});
+$("analyzeText").onclick=()=>{let s=$("sourceText").value.trim();if(!s){alert("중국어 문장을 입력하세요.");return}
+ const seen=new Set();
+ analysis=splitSentences(s).map(x=>({s:x,toks:segWords(x).filter(w=>!seen.has(w)&&seen.add(w)).map(w=>{const d=dict[w]||["",""];return {w,py:d[0],mean:d[1],sel:!STOP.has(w)&&w.length>0}})})).filter(a=>a.toks.length);
+ renderAnalysis();
+ const n=analysis.reduce((c,a)=>c+a.toks.length,0);
+ $("textStatus").textContent=analysis.length?("문장 "+analysis.length+"개 · 단어 후보 "+n+"개입니다. 병음·뜻은 비어 있으면 'AI로 채우기'를 누르거나 직접 입력하세요."):"중국어 문장을 찾지 못했습니다."};
+async function callApi(path,body){
+ for(let i=0;i<2;i++){
+  const r=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json","x-access-code":localStorage.getItem("fix_code")||""},body:JSON.stringify(body)});
+  if(r.status===401&&i===0){const c=prompt("접근 코드를 입력하세요");if(!c)throw new Error("접근 코드가 필요합니다.");localStorage.setItem("fix_code",c);continue}
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||("서버 오류 "+r.status));
+  return d}
+ throw new Error("접근 코드가 올바르지 않습니다.")}
+$("fillAi").onclick=async()=>{
+ if(!analysis.length)return;
+ const toks=[...new Set(analysis.flatMap(a=>a.toks.map(t=>t.w)))].slice(0,80);
+ $("fillAi").disabled=true;$("textStatus").textContent="AI가 병음과 뜻을 채우는 중…";
+ try{
+  const d=await callApi("/api/analyze",{sentences:analysis.map(a=>a.s).slice(0,12),tokens:toks});
+  const map=new Map((d.tokens||[]).map(x=>[x.word,x]));let n=0;
+  analysis.forEach(a=>a.toks.forEach(t=>{const x=map.get(t.w);if(!x||t.edited)return;if(x.pinyin)t.py=x.pinyin;if(x.meaning)t.mean=x.meaning;n++}));
+  renderAnalysis();$("textStatus").textContent=n+"개 단어의 병음·뜻을 채웠습니다. 틀린 부분은 직접 고치세요."+(toks.length<analysis.reduce((c,a)=>c+a.toks.length,0)?" (한 번에 80개까지만 처리)":"")
+ }catch(e){$("textStatus").textContent="AI 채우기 실패: "+e.message+" (Vercel 배포와 GEMINI_API_KEY 설정이 필요합니다.)"}
+ finally{$("fillAi").disabled=false}};
+$("saveSplit").onclick=()=>{let n=0;analysis.forEach(a=>{if(sentences.some(x=>x.text===a.s&&x.videoId===videoId))return;sentences.unshift({id:Date.now()+Math.random(),text:a.s,source:$("sourceType").value,videoId,time:time(),start,end});n++});save();$("textStatus").textContent="문장 "+n+"개를 저장했습니다. (이미 저장된 문장은 건너뜀)"};
+$("saveWords").onclick=()=>{let n=0;analysis.forEach(a=>a.toks.forEach(t=>{if(!t.sel||words.some(x=>x.word===t.w))return;words.unshift({id:Date.now()+Math.random(),word:t.w,pinyin:t.py||"",meaning:t.mean||"",context:a.s,videoId:curMark?curMark.videoId:videoId,time:curMark?curMark.time:time()});n++}));save();renderAnalysis();$("textStatus").textContent=n+"개 단어를 단어장에 저장했습니다."};
+$("saveSentence").onclick=()=>{let text=$("sourceText").value.trim();if(!text){alert("저장할 문장을 입력하세요.");return}sentences.unshift({id:Date.now()+Math.random(),text,source:$("sourceType").value,videoId,time:time(),start,end});save();$("textStatus").textContent="문장을 저장했습니다."};
+$("runOcr").onclick=async()=>{
+ if(!selectedImage){alert("영상 화면 캡처 이미지를 먼저 선택하세요.");return}
+ if(!window.Tesseract){$("ocrStatus").textContent="OCR 엔진을 불러오지 못했습니다. 인터넷 연결 후 페이지를 새로고침해 주세요.";return}
+ const lang=$("ocrLang").value;
+ $("runOcr").disabled=true;
+ $("ocrStatus").textContent="이미지 준비 중…";
+ try{
+   // 작은 자막의 인식률을 높이기 위해 이미지를 2배 확대하고 명암을 보정합니다.
+   const img=new Image(), url=URL.createObjectURL(selectedImage);
+   await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});
+   const canvas=document.createElement("canvas"), ctx=canvas.getContext("2d");
+   let sx=0,sy=Math.round(img.naturalHeight*(+$("subArea").value)),sw=img.naturalWidth,sh=img.naturalHeight-sy;
+   if(cropRect){const W=img.naturalWidth,H=img.naturalHeight;sx=Math.min(W-8,Math.round(cropRect.x*W));sy=Math.min(H-8,Math.round(cropRect.y*H));sw=Math.max(8,Math.min(W-sx,Math.round(cropRect.w*W)));sh=Math.max(8,Math.min(H-sy,Math.round(cropRect.h*H)))}
+   const scale=Math.min(3,Math.max(2,1800/Math.max(sw,sh)));
+   canvas.width=Math.round(sw*scale); canvas.height=Math.round(sh*scale);
+   ctx.drawImage(img,sx,sy,sw,sh,0,0,canvas.width,canvas.height);
+   const pixels=ctx.getImageData(0,0,canvas.width,canvas.height), d=pixels.data;
+   for(let i=0;i<d.length;i+=4){
+     const gray=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+     const v=Math.max(0,Math.min(255,(gray-128)*1.25+128));
+     d[i]=d[i+1]=d[i+2]=v;
+   }
+   ctx.putImageData(pixels,0,0);
+   $("ocrStatus").textContent="OCR 인식 중… 첫 실행은 언어 데이터를 내려받느라 오래 걸릴 수 있습니다.";
+   const r=await Tesseract.recognize(canvas,lang,{logger:m=>{
+     if(m.status)$("ocrStatus").textContent=m.status+(m.progress!=null?" "+Math.round(m.progress*100)+"%":"");
+   }});
+   $("ocrText").value=onlyZh(cleanZh(r.data.text));
+   $("ocrStatus").textContent=$("ocrText").value?"인식 완료. 결과를 확인하고 틀린 글자는 직접 수정하세요.":"중국어 자막을 찾지 못했습니다. 자막 위치를 바꾸거나 자막 부분만 크게 잘라 다시 시도해 보세요.";
+   URL.revokeObjectURL(url);if($("ocrText").value&&$("autoRun").checked)aiRecommend();
+ }catch(e){
+   $("ocrStatus").textContent="OCR 처리에 실패했습니다. 인터넷 연결을 확인하고, 자막 부분만 잘라낸 이미지로 다시 시도해 주세요.";
+ }finally{$("runOcr").disabled=false}
+};
+let cropRect=null,cropMode=false,cropDrag=null;
+function drawCrop(){const b=$("cropBox");if(!cropRect){b.style.display="none";return}b.style.display="block";b.style.left=cropRect.x*100+"%";b.style.top=cropRect.y*100+"%";b.style.width=cropRect.w*100+"%";b.style.height=cropRect.h*100+"%"}
+function updCropUi(){$("cropBtn").textContent=cropMode?"드래그해서 자막 부분을 감싸세요":(cropRect?"✂ 영역 다시 선택":"✂ 자막 영역 직접 선택");$("cropClear").style.display=cropRect?"block":"none";$("subArea").disabled=!!cropRect}
+function setCropMode(on){cropMode=on;$("pvWrap").classList.toggle("sel",on);updCropUi()}
+function pvPt(e){const r=$("pvWrap").getBoundingClientRect();return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
+$("cropBtn").onclick=()=>{if(!selectedImage){alert("이미지를 먼저 선택하세요.");return}setCropMode(!cropMode)};
+$("cropClear").onclick=()=>{cropRect=null;drawCrop();setCropMode(false)};
+$("pvWrap").addEventListener("pointerdown",e=>{if(!cropMode)return;e.preventDefault();cropDrag=pvPt(e);cropRect={x:cropDrag.x,y:cropDrag.y,w:0,h:0};try{$("pvWrap").setPointerCapture(e.pointerId)}catch(_){}drawCrop()});
+$("pvWrap").addEventListener("pointermove",e=>{if(!cropDrag)return;const p=pvPt(e);cropRect={x:Math.min(cropDrag.x,p.x),y:Math.min(cropDrag.y,p.y),w:Math.abs(p.x-cropDrag.x),h:Math.abs(p.y-cropDrag.y)};drawCrop()});
+function endCrop(){if(!cropDrag)return;cropDrag=null;if(cropRect&&(cropRect.w<0.03||cropRect.h<0.02))cropRect=null;drawCrop();setCropMode(false);if(cropRect)$("ocrStatus").textContent="영역을 지정했습니다. '이미지에서 글자 추출'을 눌러 다시 인식하세요."}
+$("pvWrap").addEventListener("pointerup",endCrop);$("pvWrap").addEventListener("pointercancel",endCrop);
+// ===== AI(Gemini)로 자막만 읽기 =====
+$("aiOcrBtn").onclick=async()=>{
+ if(!selectedImage){alert("영상 화면 캡처 이미지를 먼저 선택하세요.");return}
+ $("aiOcrBtn").disabled=true;$("ocrStatus").textContent="AI가 자막을 읽는 중…";
+ let url=null;
+ try{
+  const img=new Image();url=URL.createObjectURL(selectedImage);
+  await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url});
+  const W=img.naturalWidth,H=img.naturalHeight;
+  let sx=0,sy=Math.round(H*(+$("subArea").value)),sw=W,sh=H-sy;
+  if(cropRect){sx=Math.min(W-8,Math.round(cropRect.x*W));sy=Math.min(H-8,Math.round(cropRect.y*H));sw=Math.max(8,Math.min(W-sx,Math.round(cropRect.w*W)));sh=Math.max(8,Math.min(H-sy,Math.round(cropRect.h*H)))}
+  const k=Math.min(1,1600/Math.max(sw,sh));
+  const c=document.createElement("canvas");c.width=Math.max(8,Math.round(sw*k));c.height=Math.max(8,Math.round(sh*k));
+  c.getContext("2d").drawImage(img,sx,sy,sw,sh,0,0,c.width,c.height);
+  const b64=c.toDataURL("image/jpeg",0.85).split(",")[1];
+  const d=await callApi("/api/ocr",{image:b64,mime:"image/jpeg"});
+  const text=(d.lines||[]).join("\n");
+  $("ocrText").value=text;
+  $("ocrStatus").textContent=text?"AI가 자막을 읽었습니다. 틀린 글자가 있으면 직접 수정하세요.":"중국어 자막을 찾지 못했습니다. 자막 부분만 영역 선택해서 다시 시도해 보세요.";
+  if(text&&$("autoRun").checked)aiRecommend();
+ }catch(e){$("ocrStatus").textContent="AI 자막 읽기 실패: "+e.message+" (Vercel 배포와 GEMINI_API_KEY 설정이 필요합니다.)"}
+ finally{if(url)URL.revokeObjectURL(url);$("aiOcrBtn").disabled=false}
+};
+let curMark=null,aiWords=[],aiSentence="";
+const HAN=/[\u3400-\u4dbf\u4e00-\u9fff]/g;
+function onlyZh(t){return String(t||"").split("\n").map(l=>{let han=(l.match(HAN)||[]).length,tot=l.replace(/\s/g,"").length;return han>=2&&han/tot>=0.5?l.replace(/^[^\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+/,"").replace(/[^\u3400-\u9fff\u3000-\u303f\uff00-\uffef]+$/,""):""}).filter(Boolean).join("\n")}
+function pickImage(f){if(!f)return;selectedImage=f;cropRect=null;drawCrop();setCropMode(false);const pv=$("preview");pv.onload=()=>{const a=pv.naturalWidth/Math.max(1,pv.naturalHeight);$("pvWrap").style.width="min(100%,"+Math.round(320*a)+"px)"};pv.src=URL.createObjectURL(f);$("pvWrap").style.display="block";$("ocrStatus").textContent="이미지 준비 완료";if($("autoRun").checked)$("runOcr").click()}
+$("imageFile").onchange=e=>{pickImage(e.target.files[0]);e.target.value=""};
+document.addEventListener("paste",e=>{let it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type.startsWith("image/"));if(it){tab("imagePanel");pickImage(it.getAsFile())}});
+$("markShotBtn").onclick=()=>{let n=marks.length;$("markBtn").onclick();if(marks.length===n)return;try{if(demo){demoPlaying=false;$("playPause").textContent="재생"}else player.pauseVideo()}catch(e){}tab("imagePanel");$("ocrStatus").textContent="체크 "+fmt(curMark.time)+" 저장됨. 지금 화면을 스크린샷으로 찍은 뒤 아래에서 이미지를 선택하세요. (PC: 캡처 후 Ctrl+V)";$("imageFile").scrollIntoView({block:"center"})};
+async function aiRecommend(){
+ let text=$("ocrText").value.trim();if(!text){alert("먼저 자막을 추출하세요.");return}
+ $("aiStatus").textContent="AI가 공부할 단어를 고르는 중…";$("aiBtn").disabled=true;
+ try{
+  let r=await fetch("/api/recommend",{method:"POST",headers:{"Content-Type":"application/json","x-access-code":localStorage.getItem("fix_code")||""},body:JSON.stringify({text})});
+  if(r.status===401){let c=prompt("접근 코드를 입력하세요");if(c){localStorage.setItem("fix_code",c);$("aiBtn").disabled=false;return aiRecommend()}$("aiStatus").textContent="접근 코드가 필요합니다.";return}
+  let d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||("서버 오류 "+r.status));
+  aiWords=d.words||[];aiSentence=d.corrected||text;renderAi();
+  if(curMark){curMark.sentence=aiSentence;save()}
+ }catch(e){$("aiStatus").textContent="AI 추천 실패: "+e.message+" (Vercel에 배포하고 GEMINI_API_KEY를 설정해야 동작합니다.)"}
+ finally{$("aiBtn").disabled=false}
+}
+function renderAi(){
+ $("aiStatus").textContent=aiWords.length?"추천 단어 "+aiWords.length+"개 · AI 보정 문장: "+aiSentence:"추천할 단어를 찾지 못했습니다.";
+ $("aiList").innerHTML=aiWords.map((w,i)=>{let have=words.some(x=>x.word===w.word);return `<div class="wordrow"><div><div class="word">${esc(w.word)}</div><div class="details">${esc(w.pinyin)} · ${esc(w.meaning)}${w.level?" · "+esc(w.level):""}<br>${esc(w.reason||"")}</div></div><label><input type="checkbox" data-i="${i}" ${have?"disabled":"checked"} style="width:auto"> ${have?"저장됨":"저장"}</label></div>`}).join("");
+ $("aiSave").style.display=aiWords.length?"block":"none"}
+$("aiBtn").onclick=aiRecommend;
+$("aiSave").onclick=()=>{let n=0;[...$("aiList").querySelectorAll("input:checked")].forEach(x=>{let w=aiWords[+x.dataset.i];if(!w||words.some(y=>y.word===w.word))return;words.unshift({id:Date.now()+Math.random(),word:w.word,pinyin:w.pinyin||"",meaning:w.meaning||"",context:aiSentence,videoId:curMark?curMark.videoId:videoId,time:curMark?curMark.time:time()});n++});save();renderAi();$("aiStatus").textContent=n+"개 단어를 단어장에 저장했습니다."};
+window.goWord=id=>{let w=words.find(x=>String(x.id)===String(id));if(w)gotoVideo(w.videoId,w.time||0)};
+$("cleanOcr").onclick=()=>{$("ocrText").value=cleanZh($("ocrText").value);$("ocrStatus").textContent="글자 사이 공백을 정리했습니다. 결과를 확인하고 틀린 글자는 수정하세요."};
+$("cleanText").onclick=()=>{$("sourceText").value=cleanZh($("sourceText").value);$("textStatus").textContent="글자 사이 공백을 정리했습니다."};
+$("useOcr").onclick=()=>{if(!$("ocrText").value.trim()){alert("OCR 결과를 입력하세요.");return}$("sourceText").value=cleanZh($("ocrText").value);$("sourceType").value="ocr";tab("textPanel");$("analyzeText").click()};
+$("useStt").onclick=()=>{if(!$("sttText").value.trim()){alert("텍스트를 입력하세요.");return}$("sourceText").value=$("sttText").value;$("sourceType").value="stt";tab("textPanel");$("analyzeText").click()};
+$("rangeInfo").onclick=()=>$("sttStatus").textContent="선택 구간: "+(start===null?"시작 미지정":fmt(start))+" – "+(end===null?"종료 미지정":fmt(end))+". 이 버전은 STT 엔진 연결 전입니다.";
+$("clearWords").onclick=()=>{if(confirm("단어장을 모두 삭제할까요?")){words=[];save()}};
+$("exportData").onclick=()=>{let b=new Blob([JSON.stringify({marks,words,sentences,ranges},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="language-study-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)};
+$("importData").onclick=()=>$("importFile").click();
+$("importFile").onchange=async e=>{try{let d=JSON.parse(await e.target.files[0].text());marks=d.marks||[];words=d.words||[];sentences=d.sentences||[];ranges=d.ranges||[];save();alert("기록을 가져왔습니다.")}catch(err){alert("백업 파일을 읽을 수 없습니다.")}e.target.value=""};
+function render(){renderRanges();$("marksList").innerHTML=marks.length?marks.map(m=>`<div class="item"><div class="meta" style="cursor:pointer" onclick="goMark('${m.id}')"><strong>▶ ${fmt(m.time)} · ${esc(m.title||m.videoId)}</strong><small>${esc(m.text||m.sentence||"눌러서 이 장면으로 이동")}</small></div><div class="row" style="margin:0"><button class="secondary" onclick="markAs('${m.id}','s')">시작</button><button class="secondary" onclick="markAs('${m.id}','e')">끝</button><button class="ghost" onclick="nameMark('${m.id}')">이름</button><button class="danger" onclick="delMark('${m.id}')">삭제</button></div></div>`).join(""):'<div class="empty">체크한 장면이 없습니다. 테스트 모드에서도 시험할 수 있습니다.</div>';$("sentencesList").innerHTML=sentences.length?sentences.map(s=>`<div class="item"><div class="meta"><strong>${esc(s.text)}</strong><small>${esc(s.source)} · ${fmt(s.time||0)}</small></div><button class="ghost" onclick="goSent('${s.id}')">이동</button><button class="secondary" onclick="editSentence('${s.id}')">불러오기</button></div>`).join(""):'<div class="empty">저장한 문장이 없습니다.</div>';$("vocabList").innerHTML=words.length?words.map(w=>`<div class="item"><div class="meta"><strong>${esc(w.word)} ${esc(w.pinyin||"")}</strong><small>${esc(w.meaning||"뜻 확인 필요")}<br>${esc(w.context||"")}</small></div>${w.videoId?`<button class="ghost" onclick="goWord('${w.id}')">▶ ${fmt(w.time)}</button>`:""}<button class="secondary" onclick="editWord('${w.id}')">수정</button><button class="danger" onclick="delWord('${w.id}')">삭제</button></div>`).join(""):'<div class="empty">저장한 단어가 없습니다.</div>'}
+window.delMark=id=>{marks=marks.filter(m=>String(m.id)!==String(id));save()};
+window.editWord=id=>{let w=words.find(x=>String(x.id)===String(id));if(!w)return;let py=prompt("병음",w.pinyin||"");if(py===null)return;let mn=prompt("한국어 뜻",w.meaning||"");if(mn===null)return;w.pinyin=py.trim();w.meaning=mn.trim();save()};
+window.delWord=id=>{words=words.filter(m=>String(m.id)!==String(id));save()};
+window.editSentence=id=>{let s=sentences.find(x=>String(x.id)===String(id));if(!s)return;$("sourceText").value=s.text;$("sourceType").value=s.source;tab("textPanel")};
+render();
+</script>
+</body></html>
